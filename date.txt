@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>طلب موعد استثنائي ✨</title>
+    <style>
+        :root {
+            --primary: #ff6b8b;
+            --background: #fff0f3;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-sub: #718096;
+            --btn-no-bg: #f7fafc;
+            --btn-no-text: #4a5568;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ffe5ec 0%, #ffc2d1 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(255, 107, 139, 0.15);
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+            min-height: 440px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .step {
+            display: none; /* يتم إخفاء الخطوات افتراضياً ويتحكم الجافا سكريبت بإظهارها */
+            width: 100%;
+        }
+
+        /* الكلاس المسؤول عن إظهار الخطوة النشطة فوراً */
+        .step.active {
+            display: block !important;
+        }
+
+        h2 {
+            color: var(--text-main);
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        p {
+            color: var(--text-sub);
+            font-size: 1rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .avatar-emoji {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-top: 20px;
+            width: 100%;
+            min-height: 60px;
+            position: relative;
+        }
+
+        button {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-yes {
+            background: linear-gradient(135deg, #ff6b8b 0%, #ff4773 100%);
+            color: white;
+            flex: 1;
+            max-width: 140px;
+        }
+
+        .btn-no {
+            background: var(--btn-no-bg);
+            color: var(--btn-no-text);
+            border: 1px solid #e2e8f0;
+            flex: 1;
+            max-width: 140px;
+            transition: left 0.15s ease-out, top 0.15s ease-out;
+            z-index: 999;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            margin: 12px 0;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 1rem;
+            text-align: center;
+            background-color: #f7fafc;
+            color: var(--text-main);
+            outline: none;
+        }
+
+        label {
+            display: block;
+            text-align: right;
+            color: var(--text-main);
+            font-weight: 600;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+            width: 100%;
+        }
+
+        .food-item {
+            background: #f7fafc;
+            padding: 15px 10px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            cursor: pointer;
+        }
+
+        .food-item.selected {
+            background: #fff0f3;
+            border-color: var(--primary);
+        }
+
+        .food-item span {
+            display: block;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .food-item p {
+            margin: 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const noBtn = document.getElementById('noBtn');
+            const container = document.getElementById('mainContainer');
+
+            let selectedDate = "";
+            let selectedTime = "";
+            let selectedFood = "";
+
+            // دالة التنقل بين الخطوات وحفظ البيانات المكتوبة
+            window.nextStep = function(stepNumber) {
+                if (stepNumber === 4) {
+                    selectedDate = document.getElementById('datePicker').value;
+                    selectedTime = document.getElementById('timePicker').value;
+                    
+                    if(!selectedDate || !selectedTime) {
+                        alert("الرجاء تحديد التاريخ والوقت أولاً 📅");
+                        return;
+                    }
+                }
+
+                document.querySelectorAll('.step').forEach(step => {
+                    step.classList.remove('active');
+                });
+                const nextStepElement = document.getElementById('step' + stepNumber);
+                if (nextStepElement) {
+                    nextStepElement.classList.add('active');
+                }
+            }
+
+            // دالة هروب الزر الطائر بعيداً
+            function escapeButton(e) {
+                if (e) e.preventDefault(); // منع الضغط بالخطأ على الموبايل
+
+                const containerWidth = container.clientWidth;
+                const containerHeight = container.clientHeight;
+                const btnWidth = noBtn.offsetWidth;
+                const btnHeight = noBtn.offsetHeight;
+
+                const maxX = containerWidth - btnWidth - 40;
+                const maxY = containerHeight - btnHeight - 40;
+
+                const randomX = Math.floor(Math.random() * maxX) + 20;
+                const randomY = Math.floor(Math.random() * maxY) + 20;
+
+                noBtn.style.position = 'absolute';
+                noBtn.style.left = randomX + 'px';
+                noBtn.style.top = randomY + 'px';
+                noBtn.style.margin = '0';
+            }
+
+            if (noBtn) {
+                noBtn.addEventListener('mouseenter', escapeButton);
+                noBtn.addEventListener('touchstart', escapeButton, { passive: false });
+            }
+
+            // اختيار الأطعمة وتخزين الاسم المختار
+            document.querySelectorAll('.food-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.food-item').forEach(i => i.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedFood = this.querySelector('p').innerText;
+                });
+            });
+
+            // دالة إرسال البيانات للتليجرام
+            window.sendDataToTelegram = function() {
+                if(!selectedFood) {
+                    alert("الرجاء اختيار الأكل أولاً 🍕");
+                    return;
+                }
+
+                // ⬇⬇⬇ امسح النص العربي واكتب التوكن والـ ID الخاص بك داخل علامات الاقتباس '' ⬇⬇⬇
+                const telegramToken = '8511588358:AAHK4wp9EnwdSIc8ufDXwEXKieaMTf6UwT0'; // السطر 146
+                const chatId = '8290009049';         // السطر 147
+                // ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
+
+                const message = `🎉 وافقت على الموعد!\n\n📅 التاريخ: ${selectedDate}\n⏰ الوقت: ${selectedTime}\n🍔 الخيار المختار: ${selectedFood}`;
+                const url = `https://api.telegram.org/bot${telegramToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
+
+                fetch(url)
+                .then(response => {
+                    nextStep(5);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    nextStep(5); // الانتقال للخطوة الأخيرة حتى في حال تعطل الشبكة لديها
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+
+<div class="container" id="mainContainer">
+
+    <div class="step active" id="step1">
+        <div class="avatar-emoji">🐶</div>
+        <h2>هل تقبلين الخروج معي في موعد؟ 🌸</h2>
+        <p>عليك الله وافقي </p>
+        <div class="btn-container">
+            <button class="btn-yes" onclick="nextStep(2)">نعم  ♥</button>
+            <button class="btn-no" id="noBtn">لا</button>
+        </div>
+    </div>
+
+    <div class="step" id="step2">
+        <div style="font-size: 3.5rem; margin-bottom: 10px;">😳</div>
+        <h2>جووة ليك واقفتي 🫢 </h2>
+        <p>يا زولة والله ما قايلك بتوافقي! </p>
+        <div class="btn-container">
+            <button class="btn-yes" style="max-width: 200px;" onclick="nextStep(3)">خلاص جامد واصلي </button>
+        </div>
+    </div>
+
+    <div class="step" id="step3">
+        <h2>إذن... فاضية بتين؟ 📅</h2>
+        
+        <label>حددي اليوم المناسب:</label>
+        <input type="date" id="datePicker" class="form-control">
+        
+        <label>حددي الوقت المناسب:</label>
+        <select id="timePicker" class="form-control">
+            <option value="12:00 PM">12:00 مساءً</option>
+            <option value="03:00 PM">04:00 مساءً</option>
+            <option value="05:00 PM">05:00 مساءً</option>
+            <option value="08:00 PM">09:00 مساءً</option>
+            <option value="08:00 PM">08:00 مساءً</option>
+        </select>
+        
+        <div class="btn-container">
+            <button class="btn-yes" style="max-width: 200px;" onclick="nextStep(4)">تحديد الموعد ♥</button>
+        </div>
+    </div>
+
+    <div class="step" id="step4">
+        <h2>اها ناكل شنو؟</h2>
+        <div class="food-grid">
+            <div class="food-item"><span>🍕</span><p>بيتزا</p></div>
+            <div class="food-item"><span>🧆 </span><p>طعمية</p></div>
+            <div class="food-item"><span>🍔</span><p>برقر</p></div>
+            <div class="food-item"><span>🍰 </span><p>باسطا</p></div>
+            <div class="food-item"><span>🍗 </span><p>جداد</p></div>
+            <div class="food-item"><span>🍓 </span><p>عصير فراولة</p></div>
+        </div>
+        <div class="btn-container">
+            <button class="btn-yes" style="max-width: 200px;" onclick="sendDataToTelegram()">تأكيد الحجز ✨</button>
+        </div>
+    </div>
+
+    <div class="step" id="step5">
+        <div style="font-size: 3.5rem; margin-bottom: 10px;">🎉</div>
+        <h2>خلاص انا بنتظر اليوم دا بي فارغ الصبر تمام 🌚 !</h2>
+        <h2>يلا خليك جاهزة وما تديني سوط وبجيك بي ركشة مصطفى 😆 🚗</h2>
+        <p style="font-size: 0.9rem; margin-top: 20px;"></p>
+    </div>
+
+</div>
+
+</body>
+</html>
